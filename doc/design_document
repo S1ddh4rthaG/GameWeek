@@ -2,6 +2,14 @@ engine: pygame
 2D top-down shooter
 SDG goal awareness
 
+
+
+kinematics:
 all angles in degrees
 all time in milliseconds
 all distance in pixels
+width: defined as horizontal size of window 
+height: defined as vertical size of window
+x axis: goes left to right, horizontal
+y axis: goes bottom to top, vertical
+theta: positive when measured counterclockwise, angle made with positive x axis
