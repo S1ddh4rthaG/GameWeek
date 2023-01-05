@@ -1,3 +1,7 @@
 engine: pygame
 2D top-down shooter
 SDG goal awareness
+
+all angles in degrees
+all time in milliseconds
+all distance in pixels
