@@ -4,11 +4,13 @@ import random
 
 class Cell:
     sprite_path = ""
+    map_sprite_path = ""
     type = 0
 
-    def __init__(self, sprite_path, type):
+    def __init__(self, sprite_path, map_sprite_path, type):
         self.sprite_path = sprite_path
         self.type = type
+        self.map_sprite_path = map_sprite_path
 
 
 def generate_terrain(n):
@@ -22,6 +24,6 @@ def generate_terrain(n):
         j = random.randint(0, n - 1)
         if terrain[i][j] is not None:
             continue
-        terrain[i][j] = Cell("./assets/bush.png", "bush")
+        terrain[i][j] = Cell("./assets/bush.png", "./assets/dot_red.png", "bush")
 
     return terrain
