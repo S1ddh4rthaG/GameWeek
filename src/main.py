@@ -1,6 +1,6 @@
 import pygame
-import random
 import math
+from terrain_generation import generate_terrain
 
 height = 800
 width = 1200
@@ -8,6 +8,8 @@ max_frame_rate = 60
 movable_width = 600
 movable_height = 360
 world_size = 4000
+square_size = 32
+num_squares = int(world_size / square_size)
 
 pygame.init()
 screen = pygame.display.set_mode((width, height))
@@ -18,14 +20,14 @@ pygame.display.set_icon(icon)
 
 class Object:  # This is the base class for all elements in the game
     x = 0
-    y = 0       # co-ordinates in absolute space
-    v = 0       # magnitude of velocity vector
-    theta = 0   # angle made with positive x axis
-    w = 0       # angular velocity
+    y = 0  # co-ordinates in absolute space
+    v = 0  # magnitude of velocity vector
+    theta = 0  # angle made with positive x axis
+    w = 0  # angular velocity
     is_valid = True
-    sprite = None   # image to display at the location of the object
+    sprite = None  # image to display at the location of the object
 
-    def step(self, dt):     # moves the object in one frame
+    def step(self, dt):  # moves the object in one frame
         v_x = math.cos(math.radians(self.theta)) * self.v
         v_y = math.sin(math.radians(self.theta)) * self.v
         self.x += v_x * dt
@@ -34,7 +36,7 @@ class Object:  # This is the base class for all elements in the game
         self.theta %= 360
 
 
-class Fireball(Object):   # shot by player using mouse
+class Fireball(Object):  # shot by player using mouse
     velocity = 1
     sprite = pygame.image.load("./assets/bullet.png")
     timer = 1000
@@ -49,16 +51,16 @@ class Fireball(Object):   # shot by player using mouse
         self.theta = math.degrees(math.atan2(m_y - source.y, m_x - source.x))
 
 
-class Player(Object):   # controlled by player
-    max_v = 0.4         # running velocity
-    max_w = 0.1         # turning angular velocity
+class Player(Object):  # controlled by player
+    max_v = 0.4  # running velocity
+    max_w = 0.1  # turning angular velocity
     sprite = pygame.image.load("./assets/player.png")
 
-    def __process_event__(self, e, objs):   # processes keystrokes
+    def __process_event__(self, e, objs):  # processes keystrokes
         if e.type == pygame.MOUSEBUTTONDOWN:
             objs.append(Fireball(self))
 
-    def __process_input__(self):            # makes state of player reflect state of keyboard
+    def __process_input__(self):  # makes state of player reflect state of keyboard
         key_list = pygame.key.get_pressed()
         if key_list[pygame.K_w] and key_list[pygame.K_s]:
             self.v = 0
@@ -126,31 +128,65 @@ def update_window(x, y):
 def display(objs):
     for t in objs:
         if t.is_valid:
-            r_x = t.x - x_start
-            r_y = height - t.y + y_start
             img = pygame.transform.rotate(t.sprite, -90 + t.theta)
             rect = img.get_rect()
-            _X = r_x - (rect.width / 2)
-            _Y = r_y - (rect.height / 2)
+            _X = transform_x(t.x) - (rect.width / 2)
+            _Y = transform_y(t.y) - (rect.height / 2)
             screen.blit(img, (_X, _Y))
 
 
-objects = list()    # this list contains all elements of the game
+def transform_x(x):
+    global x_start
+    return x - x_start
 
-for i in range(int(world_size*world_size/100000)):
-    o = Object()
-    o.sprite = pygame.image.load("./assets/object.png")
-    o.x = (random.random()-0.5) * world_size
-    o.y = (random.random()-0.5) * world_size
-    objects.append(o)
+
+def transform_y(y):
+    global y_start
+    return height - y + y_start
+
+
+def diplay_gridlines():
+    lim = int(world_size / square_size)
+    for i in range(lim + 1):
+        pygame.draw.line(screen, (0, 200, 0),
+                         (transform_x(i * square_size - world_size / 2), transform_y(-world_size / 2)),
+                         (transform_x(i * square_size - world_size / 2), transform_y(world_size / 2)))
+        pygame.draw.line(screen, (0, 200, 0),
+                         (transform_x(-world_size / 2), transform_y(i * square_size - world_size / 2)),
+                         (transform_x(world_size / 2), transform_y(i * square_size - world_size / 2)),
+                         )
+
+
+def set_terrain():
+    global pic
+    global objects
+    terrain = generate_terrain(num_squares)
+    for i in range(num_squares):
+        for j in range(num_squares):
+            if not terrain[i][j] is None:
+                o = Object()
+                o.x = (i+0.5)*square_size - world_size/2
+                o.y = (j+0.5)*square_size - world_size/2
+                o.sprite = pygame.image.load(terrain[i][j].sprite_path)
+                objects.append(o)
+    pass
+
+
+
+
+
+objects = list()  # this list contains all elements of the game
+
+set_terrain()
 
 p = Player()
 p.x = width / 2
 p.y = height / 2
 objects.append(p)
-c = pygame.time.Clock()     # used to track time in milliseconds
+c = pygame.time.Clock()  # used to track time in milliseconds
 running = True
-map_toggle = True   # decides whether the map is shown or not
+map_toggle = True  # decides whether the map is shown or not
+grid_toggle = True # decides whether grid is shown or not
 while running:
 
     for event in pygame.event.get():
@@ -160,6 +196,8 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_m:
                 map_toggle = not map_toggle
+            elif event.key == pygame.K_g:
+                grid_toggle = not grid_toggle
         p.__process_event__(event, objects)
 
     p.__process_input__()
@@ -170,6 +208,8 @@ while running:
     for o in objects:
         o.step(dt)
     update_window(p.x, p.y)
+    if grid_toggle:
+        diplay_gridlines()
     display(objects)
     if map_toggle:
         map(objects, 0.1, 2, 40, 40)
