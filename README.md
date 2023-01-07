@@ -2,16 +2,16 @@
 
 ## Controls:
 
-# movement
+### movement
 `w` move forward  
 `s` move back  
 `a` turn clockwise  
 `d` turn counterclockwise  
 
-# weapons
+### weapons
 `j` fireburst  
-'click' fireball  
+`click` fireball  
 
-# settings
+### settings
 `m` toggle map  
 `g` toggle grid  
